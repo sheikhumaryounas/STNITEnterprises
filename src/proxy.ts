@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { HUMAN_COOKIE, isValidHumanCookie, turnstileKeys } from "@/server/human-check";
+import { HUMAN_COOKIE, isValidHumanCookie, requestHost, turnstileKeys } from "@/server/human-check";
 
 /**
  * One-time Cloudflare Turnstile check when a visitor opens the site (see src/server/human-check.ts).
@@ -32,7 +32,8 @@ export function proxy(request: NextRequest) {
   if (CRAWLER.test(request.headers.get("user-agent") ?? "")) return NextResponse.next();
   if (isValidHumanCookie(request.cookies.get(HUMAN_COOKIE)?.value, keys.secretKey)) return NextResponse.next();
 
-  const { hostname, pathname, search } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+  const hostname = requestHost(request.headers, request.nextUrl.host).replace(/:\d+$/, "");
   return new NextResponse(challengePage(keys.siteKey, hostname, pathname + search), {
     status: 200,
     headers: {

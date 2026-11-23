@@ -67,3 +67,13 @@ export async function verifyTurnstileToken(token: string, secretKey: string, rem
     return false;
   }
 }
+
+/**
+ * Host name the visitor actually used. Behind a reverse proxy (Hostinger runs `next start` behind
+ * its CDN), `request.nextUrl` reports the bind address (e.g. 0.0.0.0), so prefer the forwarded /
+ * Host headers.
+ */
+export function requestHost(headers: Headers, fallback: string): string {
+  const raw = headers.get("x-forwarded-host")?.split(",")[0]?.trim() || headers.get("host")?.trim();
+  return raw || fallback;
+}

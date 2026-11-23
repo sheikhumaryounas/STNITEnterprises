@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { HUMAN_COOKIE, createHumanCookie, turnstileKeys, verifyTurnstileToken } from "@/server/human-check";
+import { HUMAN_COOKIE, createHumanCookie, requestHost, turnstileKeys, verifyTurnstileToken } from "@/server/human-check";
 
 /**
  * The challenge page (src/proxy.ts) submits its form here once the Turnstile widget passes.
@@ -15,9 +15,16 @@ function safeNext(value: FormDataEntryValue | null): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Compare hosts, not request.nextUrl.origin: behind Hostinger's proxy that is http://0.0.0.0:<port>.
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
-    return new NextResponse("Forbidden", { status: 403 });
+  if (origin) {
+    let originHost: string | null = null;
+    try {
+      originHost = new URL(origin).host;
+    } catch {}
+    if (originHost !== requestHost(request.headers, request.nextUrl.host)) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
   }
 
   let form: FormData;
@@ -27,8 +34,8 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Bad request", { status: 400 });
   }
   const next = safeNext(form.get("next"));
-  const response = NextResponse.redirect(new URL(next, request.nextUrl.origin), 303);
-  response.headers.set("Cache-Control", "no-store");
+  // Relative Location, so the browser stays on the host it is on (not the proxy's internal address).
+  const response = new NextResponse(null, { status: 303, headers: { Location: next, "Cache-Control": "no-store" } });
 
   const keys = turnstileKeys();
   if (!keys) return response;
