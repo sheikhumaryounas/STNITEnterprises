@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/bootstrap-owner.mjs && next build --webpack",
+    "build": "node scripts/bootstrap-owner.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
