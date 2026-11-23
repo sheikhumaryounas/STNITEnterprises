@@ -50,14 +50,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // PGlite (local development database) ships WebAssembly files; load it from node_modules as-is.
   serverExternalPackages: ["@electric-sql/pglite"],
-  turbopack: {
-    rules: {
-      "*.css": {
-        loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
-      },
-    },
-  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
